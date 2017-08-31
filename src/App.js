@@ -7,7 +7,6 @@ import SearchBooks from './SearchBooks'
 class BooksApp extends Component {
   state = {
     books: [],
-    showSearchPage: true
   }
 
   componentDidMount(){
@@ -16,18 +15,24 @@ class BooksApp extends Component {
     })
   }
 
+  changeShelf = (book, shelf) => {
+   if (this.state.books) {
+     BooksAPI.update(book,shelf).then(() => {
+       book.shelf = shelf;
+       this.setState(state => ({
+         books: state.books.filter(b => b.id !== book.id).concat([ book ])
+       }))
+     })
+   }
+ }
+
   render() {
     return (
       <div className="app">
-        {this.state.showSearchPage ? (
-          <SearchBooks
-            showSearchPage={this.state.showSearchPage}
-          />
-        ) : (
-          <ListBooks
-            books={this.state.books}
-          />
-        )}
+        <ListBooks
+          books={this.state.books}
+          onChangeShelf={this.changeShelf}
+        />
       </div>
     )
   }
