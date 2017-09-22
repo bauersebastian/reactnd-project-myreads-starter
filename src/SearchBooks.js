@@ -1,36 +1,67 @@
 import React, {Component} from 'react'
 import PropTypes from 'prop-types'
+import * as BooksAPI from './BooksAPI'
+import {Link} from 'react-router-dom'
+import Book from './Book'
 
 class SearchBooks extends Component {
 
+  static propTypes = {
+    onChangeShelf: PropTypes.func.isRequired,
+    books: PropTypes.array.isRequired,
+  };
+
   state = {
-    showSearchPage: true
-  }
+    query: '',
+    books: []
+  };
+
+  searchQuery = (query) => {
+    if (!query) {
+      this.setState({query: '', books: []})
+    } else {
+      this.setState({query: query.trim()});
+      BooksAPI.search(query).then((books) => {
+        if (books.error) {
+          books = []
+        }
+        books.map(book => (this.props.books.filter((b) => b.id === book.id).map(b => book.shelf = b.shelf)))
+        this.setState({books})
+      })
+    }
+  };
+
 
   render() {
-    const { showSearchPage } = this.state
-
-    return(
-      <div className="search-books">
-        <div className="search-books-bar">
-          <a className="close-search" onClick={() => this.setState({ showSearchPage: false })}>Close</a>
-          <div className="search-books-input-wrapper">
-            {/*
-              NOTES: The search from BooksAPI is limited to a particular set of search terms.
-              You can find these search terms here:
-              https://github.com/udacity/reactnd-project-myreads-starter/blob/master/SEARCH_TERMS.md
-
-              However, remember that the BooksAPI.search method DOES search by title or author. So, don't worry if
-              you don't find a specific author or title. Every search is limited by search terms.
-            */}
-            <input type="text" placeholder="Search by title or author"/>
-
+    return (
+        <div className="search-books">
+          <div className="search-books-bar">
+            <Link className="close-search" to="/">Close</Link>
+            <div className="search-books-input-wrapper">
+              <input
+                  type="text"
+                  placeholder="Search by title or author"
+                  onChange={(e) => this.searchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="search-books-results">
+            <ol className="books-grid">
+              <div className="bookshelf-books">
+                <ol className="books-grid">
+                  {this.state.books.map(book => (
+                      <Book
+                          onChangeShelf={this.props.onChangeShelf}
+                          key={book.id}
+                          book={book}
+                      />
+                  ))
+                  }
+                </ol>
+              </div>
+            </ol>
           </div>
         </div>
-        <div className="search-books-results">
-          <ol className="books-grid"></ol>
-        </div>
-      </div>
     )
   }
 }
